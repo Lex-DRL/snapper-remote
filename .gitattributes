@@ -1,2 +1,40 @@
-﻿# Auto-detect text/binary by default:
+﻿# Based on FPS-sample: https://github.com/Unity-Technologies/FPSSample
+# Organized+extended by Lex-DRL: https://github.com/Lex-DRL
+
+# Auto-detect text/binary by default:
 * 	text=auto eol=lf
+
+# raw-Text files
+*.[Cc][Ss][Vv] text
+*.[Mm][Dd] text
+*.[Tt][Xx][Tt] text
+
+# Checksums
+*.[Mm][Dd]5 text
+*.[Ss][Hh][Aa] text
+*.[Ss][Hh][Aa][0123456789]* text
+
+# Scripts: OS
+*.[Bb][Aa][Tt] text
+*.[Cc][Mm][Dd] text
+*.[Pp][Ll] text
+*.[Pp][Ss]1 text
+*.[Ss][Hh] text
+
+# Scripts: various Programming languages
+*.[Cc][Ss] diff=csharp text
+*.[Cc][Ss][Ss] diff=css text
+*.[Hh] text
+*.[Hh][Tt][Mm] diff=html text
+*.[Hh][Tt][Mm][Ll] diff=html text
+*.[Jj][Ss] text
+*.[Jj][Ss][Oo][Nn] text
+*.[Pp][Hh][Pp] text
+*.[Pp][Yy] diff=python text
+*.[Ss][Qq][Ll] text=auto eol=lf
+*.[Xx][Mm][Ll] diff=html text
+*.[Xx][Hh][Tt][Mm][Ll] diff=html text
+
+# Vector graphics
+*.[Ss][Vv][Gg] text
+*.[Aa][Ii] text
