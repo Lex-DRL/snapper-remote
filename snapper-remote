@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+"""
+
+import typing as _t
+
+import argparse as _argparse
+from dataclasses import dataclass as _dataclass
+from os import path as _path
+import subprocess as _subprocess
+
+
+# region internal utilities
+
+@_dataclass(init=False, frozen=True)
+class _StaticDataClass:
+	"""Base for static (non-instantiable) classes."""
+
+	def __init__(self):
+		raise TypeError(f"<{self.__class__.__name__}> is non-instantiable (static) data class")
+
+
+def _path_strip_py_exe_ext(path: str) -> str:
+	"""Remove any executable-related extensions from script path"""
+
+	# path = 'Z:/AAA/snapper-remote/snapper-remote.py.EXE.pyc.exe.pyo.py'
+	extensions_with_len = tuple(
+		(e, len(e))
+		for e in ('.py', '.pyc', '.pyd', '.pyo', '.exe')
+	)
+	not_finished = True
+	path = path.rstrip('.')
+	path_low = path.lower()
+
+	while not_finished:
+		# print('WHILE {')
+		not_finished = False  # unless we encounter any extension, assume we're done
+		for ext, ext_len in extensions_with_len:
+			# print(f'\tNext FOR: {ext}')
+			if path_low.endswith(ext):
+				not_finished = True  # we do encounter extension, need to re-check them all once again
+				path = path[:-ext_len].rstrip('.')
+				path_low = path.lower()
+				# print(f'\tRemoved {ext!r}: {path!r}')
+				break
+		# print('} WHILE')
+	# print(f'DONE: {path!r}')
+	return path
+
+
+_program_name_fallback = 'snapper-remote'  # in case it was unable to detect it dynamically
+
+
+def _program_name() -> str:
+	"""Detect program name from the file path. Fallback to hardcoded 'snapper-remote' if unable to get it from the filename."""
+
+	# __file__ = r'Z:\AAA\snapper-remote\snapper-remote..py..pyc.exe./'
+	# __file__ = 'Z:\\'
+	# print(repr(f"File path: {__file__!r}"))
+	fl: str = __file__
+	if fl.startswith('<') and fl.endswith('>'):
+		# some special file values, like '<input>'
+		return _program_name_fallback
+
+	fl = fl.replace('\\', '/').rstrip('/.')
+	fl = _path_strip_py_exe_ext(fl)
+	fl = _path.basename(fl)
+
+	# print(repr(f"File name: {fl!r}"))
+	return fl if fl else _program_name_fallback
+
+# endregion
+
+
+# ------------------------- Data containers -------------------------
+
+
+class Global(_StaticDataClass):
+	"""Container all built-in constants."""
+
+	program_name: str = _program_name()
+	version: _t.Tuple[_t.Union[str, int], ...] = (0, 5)
+
+	@staticmethod
+	def version_str() -> str:
+		return '.'.join(map(str, Global.version))
+
+
+@_dataclass
+class Config:
+	"""Per-config data."""
+	name: str
+
+	def snapshots_base_path(self) -> str:
+		raise NotImplementedError()
+
+	def backup_base_path(self) -> str:
+		raise NotImplementedError()
+
+
+class SnapperRemoteError(ValueError):
+	"""Exception type to be caught by `main()` function, to terminate program gracefully, exiting with error."""
+	pass
+
+
+# -------------------- Per-subCommand functions --------------------
+
+
+# TODO
+
+
+# ===================================================================
+# ------------------------------- CLI -------------------------------
+# ===================================================================
+
+
+def arg_parser_factory() -> _argparse.ArgumentParser:
+	parser = _argparse.ArgumentParser(
+		prog=Global.program_name,
+		description="Command-line program performing remote backups of btrfs snapshots made with <snapper>."
+	)
+	parser.add_argument('--version', help="print the version and exit")
+
+	# subparsers = parser.add_subparsers(help='sub-command help')
+	subparsers = parser.add_subparsers(description="")
+	send_parser = subparsers.add_parser('send', help='Send configured snapshots to shared directory.')
+	recv_parser = subparsers.add_parser('receive', help='Receive configured snapshots from shared directory to backup location.')
+	recv_short_parser = subparsers.add_parser('recv', help='Short for "receive".')
+	return parser
+
+
+def main():
+	parser = arg_parser_factory()
+	args = parser.parse_args()
+
+
+if __name__ == '__main__':
+	print(main())
